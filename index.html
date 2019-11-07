@@ -1,14 +1,37 @@
 <html>
   <body>
     <p id='server-time'></p>
+
+    Nickname: <input id="nick" type="text"><button onclick="sendNickname()">Use</button>
+    Message: <input id="msg" type="text"><button onclick="sendMessage()">Use</button>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
       var socket = io();
-      var el = document.getElementById('server-time');
+      var players = {};
 
-      socket.on('time', function(timeString) {
+
+      /*socket.on('time', function(timeString) {
         el.innerHTML = 'Server time: ' + timeString;
+      });*/
+      socket.on('getPlayers', function(server_players) {
+          players = Object.assign({}, server_players);
+          console.log(server_players);
       });
+
+      socket.on('newMsg', function(server_message) {
+        console.log(server_message.message);
+      });
+
+      function sendNickname() {
+        var new_nickname = document.getElementById("nick").value;
+        socket.emit('setNickname', { nickname: new_nickname });
+      }
+
+      function sendMessage() {
+        var new_message = document.getElementById("msg").value;
+        socket.emit('sendMsg', { message: new_message });
+      }
     </script>
   </body>
 </html>
