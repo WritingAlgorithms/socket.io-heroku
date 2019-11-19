@@ -1,0 +1,210 @@
+<html>
+
+<head>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.1.1/pixi.min.js"></script>
+</head>
+
+<body>
+    <h1 id="roomtitle">ROOM</h1>
+    <!--<canvas id="game_canvas" width="500" height="500" style="border:1px solid #000000;"></canvas>-->
+
+
+
+
+<script>
+    var socket = io();
+    var room = document.cookie;
+    var players = {};
+
+
+    let app = new PIXI.Application({width: 640, height: 360});
+    document.body.appendChild(app.view);
+    var state;
+    var curDelta = null;
+    var tank;
+    var tank_payload = { gameroom: room };
+    
+
+
+
+    //Aliases
+    /*let Application = PIXI.Application,
+    Container = PIXI.Container,
+    loader = PIXI.loader,
+    resources = PIXI.loader.resources,
+    TextureCache = PIXI.utils.TextureCache,
+    Sprite = PIXI.Sprite,
+    Rectangle = PIXI.Rectangle;*/
+
+    
+
+</script>
+
+<script>
+    PIXI.loader.add("PNG/Tanks/tankBlue.png");
+    PIXI.loader.add("PNG/Tanks/tankGreen.png").load(setup);
+
+    function setup() {
+        tank = new PIXI.Sprite(PIXI.loader.resources["PNG/Tanks/tankGreen.png"].texture); //from('PNG/Tanks/tankGreen.png');
+        tank.x = app.screen.width / 2;
+        tank.y = app.screen.height / 2;
+        tank.anchor.set(0.5);
+        tank_payload.x = tank.x;
+        tank_payload.y = tank.y;
+        tank_payload.rotation = tank.rotation;
+        
+        app.stage.addChild(tank);
+
+
+        socket.emit('joinGameRoom', { gameroom: room.split('=')[1] });
+
+
+        socket.on('sendToGameRoom', function(newPlayerData) {
+            console.log(newPlayerData.message);
+            players[newPlayerData.newPlayerId] = { x: tank_payload.x, y: tank_payload.y, rotation: tank_payload.rotation };
+        });
+
+        socket.on('getRoomData', function(roomData) {
+            console.log(roomData);
+            if (roomData.hasOwnProperty('players')) {
+                players = Object.assign({}, roomData.players);
+                for (var player in players) {
+                    var p = players[player];
+                    var new_tank = new PIXI.Sprite(PIXI.loader.resources["PNG/Tanks/tankBlue.png"].texture);
+                    new_tank.x = p.x;
+                    new_tank.y = p.y;
+                    new_tank.rotation = p.rotation;
+                    app.stage.addChild(new_tank);
+                }
+            }
+        });
+
+
+
+        socket.on('updatePosition', function(positionData) {
+            players[positionData.id] = positionData;
+
+            tank.rotation = positionData.rotation;
+            tank.x = positionData.x;
+            tank.y = positionData.y;
+        });
+        /*
+
+        left.press = () => {
+            tank.rotation -= curDelta !== null ? 0.2 * curDelta : 0.2;
+            tank.x = tank.x + tank.vx * Math.cos(tank.rotation);
+            tank.y = tank.y + tank.vy  * Math.sin(tank.rotation);
+        };
+
+        right.press = () => {
+            tank.rotation += curDelta !== null ? 0.2 * curDelta : 0.2;
+            tank.x = tank.x + tank.vx * Math.cos(tank.rotation);
+            tank.y = tank.y + tank.vy * Math.sin(tank.rotation);
+        };
+
+        up.press = () => {
+            tank.vx = 8;
+            tank.vy = 8;
+            tank.x = tank.x + tank.vx * Math.cos(tank.rotation);
+            tank.y = tank.y + tank.vy * Math.sin(tank.rotation);
+        };
+
+        up.release = () => {
+            tank.vx = 0;
+            tank.vy = 0;
+        };*/
+
+
+        state = play;
+
+        app.ticker.add(delta => gameLoop(delta));
+    }
+
+
+    function gameLoop(delta) {
+        //tank.rotation += 0.1 * delta;
+        curDelta = delta;
+        state(delta);
+    }
+
+
+    function play(delta) {
+
+        if (left.isDown && !right.isDown) {
+            //tank.rotation -= 0.07 * delta;
+            tank_payload.rotation = tank.rotation - (0.07 * delta);
+        }
+        if (right.isDown && !left.isDown) {
+            //tank.rotation += 0.07 * delta;
+            tank_payload.rotation = tank.rotation + (0.07 * delta);
+        }
+        if (up.isDown) {
+            //tank.x = tank.x + 6 * Math.cos(tank.rotation);
+            //tank.y = tank.y + 6 * Math.sin(tank.rotation);
+            tank_payload.x = tank.x + 6 * Math.cos(tank_payload.rotation);
+            tank_payload.y = tank.y + 6 * Math.sin(tank_payload.rotation);
+        }
+
+        socket.emit('newPosition', tank_payload);
+    }
+
+
+
+    function keyboard(value, enableHeld=true) {
+        let key = {};
+        key.value = value;
+        key.isDown = false;
+        key.isUp = true;
+        key.press = undefined;
+        key.release = undefined;
+
+        key.downHandler = event => {
+            if (event.key === key.value) {
+                if (key.isUp && key.press) { key.press(); }
+                if (key.isDown && enableHeld) { key.press(); } 
+                key.isDown = true;
+                key.isUp = false;
+                event.preventDefault();
+            }
+        };
+
+        //The `upHandler`
+        key.upHandler = event => {
+            if (event.key === key.value) {
+                if (key.isDown && key.release) { key.release(); }
+                key.isDown = false;
+                key.isUp = true;
+                event.preventDefault();
+            }    
+        };
+
+        //Attach event listeners
+        const downListener = key.downHandler.bind(key);
+        const upListener = key.upHandler.bind(key);
+  
+        window.addEventListener(
+            "keydown", downListener, false
+        );
+        window.addEventListener(
+            "keyup", upListener, false
+        );
+  
+        // Detach event listeners
+        key.unsubscribe = () => {
+            window.removeEventListener("keydown", downListener);
+            window.removeEventListener("keyup", upListener);
+        };
+  
+        return key;
+    }
+
+
+    var left = keyboard("ArrowLeft"); left.press = () => {};
+    var right = keyboard("ArrowRight"); right.press = () => {};
+    var up = keyboard("ArrowUp"); up.press = () => {};
+</script>
+
+</body>
+
+</html>

@@ -61,6 +61,10 @@ footer {
   color: white;
 }
 
+    
+ul.chatnav{height:200px;width:100%;}
+ul.chatnav{overflow:scroll; overflow-y:scroll;}
+
 /* Responsive layout - makes the two columns/boxes stack on top of each other instead of next to each other, on small screens */
 @media (max-width: 600px) {
   nav, article {
@@ -79,53 +83,47 @@ footer {
 
 <section>
   <nav>
-    <div id="room_list">
+    <ul id="room_list">
       
-    </div>
+    </ul>
   </nav>
   
   <article>
-    <div id="chat_area">
+   
+        <ul id="chat_area" class="chatnav">
 
-    </div>
+        </ul>
+    
   </article>
 </section>
 
 <footer>
+    <form method="GET" action="/room">
+      <button onclick="joinGameRoom()">Join Game Room</button>
+    </form>
+     <input id="create_gameroom_box" type="text"><button onclick="createGameRoom()">Create Game Room</button>
      <input id="msgbox" type="text"><button onclick="sendMessage()">Send</button>
 </footer>
 
 
 <script>
-    var socket = io();
-
-
-    socket.on('lobbyNewConnection', function(msg) {
+    var user_nickname;
+    var socket = io('/lobby');
+    
+    setTimeout(function() {
+        user_nickname = prompt("Enter a nickname:");
+        if (user_nickname != null) {
+            socket.emit('setNickname', { nickname: user_nickname });
+        }
+    }, 1500);
+    
+    socket.on('welcomeNickname', function(data) {
         var chatarea = document.getElementById("chat_area");
         var newline = document.createElement('li');
-        newline.innerHTML = msg.message;
+        newline.innerHTML = data.message;
         chatarea.appendChild(newline);
     });
-
-    socket.on('lobbySendMessage', function(msg) {
-        var chatarea = document.getElementById("chat_area");
-        var newline = document.createElement('li');
-        newline.innerHTML = msg.message;
-        chatarea.appendChild(newline);
-    });
-
-    socket.on('lobbyRemoveConnection', function(msg) {
-        var chatarea = document.getElementById("chat_area");
-        var newline = document.createElement('li');
-        newline.innerHTML = msg.message;
-        chatarea.appendChild(newline);
-    });
-
-    function sendMessage() {
-        var new_message = document.getElementById("msgbox").value;
-        console.log(new_message);
-        socket.emit('lobbyRecvMessage', { message: new_message });
-    }
+    
 </script>
 
 </body>

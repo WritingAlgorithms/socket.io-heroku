@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Lobby</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/lobby.js"></script>
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Style the header */
+header {
+  background-color: #666;
+  padding: 30px;
+  text-align: center;
+  font-size: 35px;
+  color: white;
+}
+
+/* Create two columns/boxes that floats next to each other */
+nav {
+  float: left;
+  width: 30%;
+  height: 300px; /* only for demonstration, should be removed */
+  background: #ccc;
+  padding: 20px;
+}
+
+/* Style the list inside the menu */
+nav ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+article {
+  float: left;
+  padding: 20px;
+  width: 70%;
+  background-color: #f1f1f1;
+  height: 300px; /* only for demonstration, should be removed */
+}
+
+/* Clear floats after the columns */
+section:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Style the footer */
+footer {
+  background-color: #777;
+  padding: 10px;
+  text-align: center;
+  color: white;
+}
+
+    
+ul.chatnav{height:200px;width:100%;}
+ul.chatnav{overflow:scroll; overflow-y:scroll;}
+
+/* Responsive layout - makes the two columns/boxes stack on top of each other instead of next to each other, on small screens */
+@media (max-width: 600px) {
+  nav, article {
+    width: 100%;
+    height: auto;
+  }
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <h2>Game Lobby</h2>
+</header>
+
+<section>
+  <nav>
+    <ul id="room_list">
+      
+    </ul>
+  </nav>
+  
+  <article>
+   
+        <ul id="chat_area" class="chatnav">
+
+        </ul>
+    
+  </article>
+</section>
+
+<footer>
+    <form method="GET" action="/room">
+      <button onclick="joinGameRoom()">Join Game Room</button>
+    </form>
+     <input id="create_gameroom_box" type="text"><button onclick="createGameRoom()">Create Game Room</button>
+     <input id="msgbox" type="text"><button onclick="sendChatMessage()">Send</button>
+</footer>
+
+
+<script>
+    
+    
+</script>
+
+</body>
+</html>
